@@ -1,0 +1,13 @@
+*.crt
+*.cert
+*.csr
+*.pem
+*.key
+pod-heartbeat
+env
+coverage.out
+
+*.out
+*.test
+vendor/**
+!vendor/manifest
