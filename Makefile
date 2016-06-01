@@ -48,7 +48,7 @@ fix_circle_go: # ensure go 1.6 is setup
 	scripts/install-go.sh
 
 push: ## push the container the the registry
-	docker push $(IMAGE)
+	docker push $(REGISTRY)/$(APP)
 
 push-circle:
 	make build-docker
