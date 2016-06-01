@@ -1,4 +1,4 @@
-FROM quay.io/getpantheon/pantheon_alpine
+FROM alpine
 
 ADD https://curl.haxx.se/ca/cacert.pem /etc/ssl/certs/
 
