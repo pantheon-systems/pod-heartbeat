@@ -1,0 +1,33 @@
+---
+machine:
+  environment:
+    GOVERSION: 1.6.2
+    GOPATH: /home/ubuntu/go_workspace
+    GOROOT: /home/ubuntu/go
+    PATH: /home/ubuntu/go/bin:$GOPATH/bin:$PATH
+    # vars for deployment on google container engine
+  services:
+    - docker
+
+dependencies:
+  cache_directories:
+    - ../go
+
+  override:
+    - make fix_circle_go
+    - make deps-circle
+    - make deps
+    - make deps-coverage
+
+test:
+  override:
+    # set COVERALLS_TOKEN environment variable on circleci.com
+    - make coveralls
+
+
+deployment:
+  production:
+    branch:
+      - master
+    commands:
+      - make push-circle
