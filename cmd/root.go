@@ -18,23 +18,27 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"time"
 
 	"github.com/pantheon-systems/pod-heartbeat/pkg/heartbeat"
+	"github.com/pantheon-systems/pod-heartbeat/pkg/restapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 type flags struct {
-	connect      string
-	url          *url.URL
-	timeout      time.Duration
-	timeoutFlag  string
-	retries      int
-	interval     time.Duration
-	intervalFlag string
+	connect          string
+	url              *url.URL
+	timeout          time.Duration
+	timeoutFlag      string
+	retries          int
+	interval         time.Duration
+	intervalFlag     string
+	StatusServer     bool
+	StatusServerPort int
 
 	configFile string
 }
@@ -96,11 +100,38 @@ func runHeartBeat(cmd *cobra.Command, args []string) {
 		Timeout:  cfg.timeout,
 		Retries:  cfg.retries,
 		Interval: cfg.interval,
+		OK:       true,
 	}
 
-	err := c.Beat()
-	if err != nil {
-		log.Fatalf("Heartbeat failed: %s\n", err.Error())
+	if cfg.StatusServer {
+		runServer(&c)
+	} else {
+		err := c.Beat()
+		if err != nil {
+			log.Fatalf("Heartbeat failed: %s\n", err.Error())
+		}
+	}
+}
+
+func runServer(c *heartbeat.Check) {
+	a := restapi.NewAPI(c)
+	/* start status server */
+	server := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", "0.0.0.0", cfg.StatusServerPort),
+		Handler: a.Router,
+	}
+
+	log.Println("starting server")
+	go func() {
+		log.Fatal(server.ListenAndServe())
+	}()
+
+	log.Println("starting heartbeat")
+	for {
+		err := c.Beat()
+		if err != nil {
+			log.Printf("Heartbeat failed: %s\n", err.Error())
+		}
 	}
 }
 
@@ -147,7 +178,7 @@ func init() {
 		"retries",
 		"r",
 		3,
-		"How many times to retry before exiting.",
+		"How many times to retry before reporting failure.",
 	)
 
 	RootCmd.Flags().StringVarP(
@@ -156,6 +187,22 @@ func init() {
 		"i",
 		"5s",
 		"Interval for the Heartbeat action.",
+	)
+
+	RootCmd.Flags().BoolVarP(
+		&cfg.StatusServer,
+		"server",
+		"s",
+		false,
+		"Run the status server instead of exiting.",
+	)
+
+	RootCmd.Flags().IntVarP(
+		&cfg.StatusServerPort,
+		"port",
+		"p",
+		9999,
+		"Port to listen on for the status server.",
 	)
 }
 
