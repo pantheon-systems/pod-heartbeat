@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/cenk/backoff"
@@ -24,6 +25,8 @@ type Check struct {
 	Retries  int
 	Timeout  time.Duration
 	Interval time.Duration
+	OK       bool
+	sync.Mutex
 }
 
 // MaxRetryBackOff Implements an implementation of backoff that has a max retry
@@ -80,9 +83,8 @@ func (c *Check) check() error {
 	return nil
 }
 
-// Beat - starts the heart beat checker
-func (c Check) Beat() error {
-
+// Beat - starts the heart beat checker.
+func (c *Check) Beat() error {
 	operation := func() error {
 		return c.check()
 	}
@@ -91,11 +93,17 @@ func (c Check) Beat() error {
 	for {
 		select {
 		case <-ticker.C:
+			c.Lock()
+
 			err := backoff.Retry(operation, &MaxRetryBackOff{Interval: c.Interval, MaxRetries: c.Retries})
 			if err != nil {
-				return fmt.Errorf("Failed to connect after %d tries: %s\n", c.Retries, err)
+				c.OK = false
+				c.Unlock()
+				return fmt.Errorf("\nFailed to connect after %d tries: %s\n", c.Retries, err)
 			}
 			log.Println("Check succeeded for ", c.URL.String())
+			c.OK = true
+			c.Unlock()
 		}
 	}
 }
