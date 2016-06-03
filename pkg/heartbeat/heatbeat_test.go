@@ -48,13 +48,22 @@ func TestCheck(t *testing.T) {
 		t.Error("Expected failure to beat but instead it worked: ", testServer.URL)
 	}
 
+	u, err = url.Parse("http://not_valid_host:80")
+	if err != nil {
+		t.Fatal("wtf happned here:", err.Error())
+	}
+
+	err = c.Beat()
+	if err == nil {
+		t.Error("Expected failure to beat but instead it worked: ", testServer.URL)
+	}
+
 	u, err = url.Parse(fmt.Sprintf("%s/beat", testServer.URL))
 	if err != nil {
 		t.Fatal("couldn't parse test server URL")
 	}
 
 	c.URL = u
-
 	// Fire this off in a goroutine then close the server. The routine shouldn't error until after
 	ch := make(chan string)
 	go func() {
