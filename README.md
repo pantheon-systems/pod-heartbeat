@@ -1,6 +1,8 @@
 [![Docker Repository on Quay](https://quay.io/repository/getpantheon/pod-heartbeat/status "Docker Repository on Quay")](https://quay.io/repository/getpantheon/pod-heartbeat)
 [![Coverage Status](https://coveralls.io/repos/github/pantheon-systems/pod-heartbeat/badge.svg?branch=master)](https://coveralls.io/github/pantheon-systems/pod-heartbeat?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pantheon-systems/pod-heartbeat)](https://goreportcard.com/report/github.com/pantheon-systems/pod-heartbeat)
+[![Unsupported](https://img.shields.io/badge/Pantheon-Unsupported-yellow?logo=pantheon&color=FFDC28)](https://pantheon.io/docs/oss-support-levels#unsupported)
+
 
 # pod heartbeat
 Connect to services or exit allowing a pod to restart.
